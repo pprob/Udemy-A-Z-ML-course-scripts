@@ -1,0 +1,50 @@
+# Natural Language Processing
+
+# Importing the libraries
+import numpy as np
+import matplotlib.pyplot as plt
+import pandas as pd
+
+# Importing the dataset
+dataset = pd.read_csv("Restaurant_Reviews.tsv", delimiter = "\t", quoting = 3)
+
+# Cleaning the texts
+import re
+import nltk
+nltk.download("stopwords")
+from nltk.corpus import stopwords
+from nltk.stem.porter import PorterStemmer
+corpus = [] #list
+for i in range(0, 1000):
+    review = re.sub("[^a-zA-Z]", " ", dataset["Review"][i])
+    review = review.lower()
+    review = review.split() # split review into different words (list)
+    ps = PorterStemmer() #stemming
+    review = [ps.stem(word) for word in review if not word in set(stopwords.words("english"))]  # Make full loop to remove words using stopwords. set makes algorithm faster than going through list
+    review = " ".join(review)  # join back review list words as a string
+    corpus.append(review) # Append review to corpus @17
+
+# Creating the bag of words model - tokenisation
+from sklearn.feature_extraction.text import CountVectorizer
+cv = CountVectorizer(max_features = 1500)
+X = cv.fit_transform(corpus).toarray() #.toarray() makes X a matrix
+y = dataset.iloc[:, 1].values
+
+# Implementing classifier
+# Splitting the dataset into the training set and test set
+from sklearn.cross_validation import train_test_split
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size = 0.2, random_state = 0)
+
+# Feature scaling no necessary (values already between 0-1)
+
+# Fitting Naive Bayes classification to training set
+from sklearn.naive_bayes import GaussianNB
+classifier = GaussianNB()
+classifier.fit(X_train, y_train)
+
+# Predicting the test set results
+y_pred = classifier.predict(X_test)
+
+# Confusion matrix
+from sklearn.metrics import confusion_matrix
+cm = confusion_matrix(y_test, y_pred)
